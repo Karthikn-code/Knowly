@@ -242,16 +242,18 @@ async def google_callback(
     response.headers["Cache-Control"] = "no-store"
     response.headers["Pragma"] = "no-cache"
     response.headers["Referrer-Policy"] = "no-referrer"
-
+    
     response.set_cookie(
         key=settings.SESSION_COOKIE_NAME,
         value=raw_session_token,
         max_age=settings.SESSION_TTL_SECONDS,
         httponly=True,
-        secure=settings.APP_ENV == "production",
-        samesite="lax",
+        secure=True,
+        samesite="none",
         path="/",
     )
+
+    
 
     response.set_cookie(
         key=settings.CSRF_COOKIE_NAME,
