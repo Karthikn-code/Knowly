@@ -22,8 +22,18 @@ class Settings(BaseSettings):
     GEMINI_GENERATION_MODEL: str = "gemini-3.5-flash-lite"
 
     # Private document storage
-    DOCUMENT_STORAGE_DIR: Path = BASE_DIR / "private_storage" / "documents"
-    MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024
+    DOCUMENT_STORAGE_PROVIDER: str = "local"
+    DOCUMENT_STORAGE_DIR: Path = (
+        BASE_DIR / "private_storage" / "documents"
+    )
+    MAX_UPLOAD_SIZE_BYTES: int = 20 * 1024 * 1024
+
+    # Tigris S3-compatible object storage
+    TIGRIS_ACCESS_KEY_ID: SecretStr | None = None
+    TIGRIS_SECRET_ACCESS_KEY: SecretStr | None = None
+    TIGRIS_BUCKET_NAME: str | None = None
+    TIGRIS_ENDPOINT_URL: str = "https://t3.storage.dev"
+    TIGRIS_REGION: str = "auto"
 
     # Frontend configuration
     FRONTEND_URL: str = "http://localhost:3000"

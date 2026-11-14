@@ -27,7 +27,7 @@ import {
 } from "@/lib/documents";
 import type { Document, User } from "@/lib/types";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const ACCEPTED_EXTENSIONS = [
   ".pdf",
@@ -155,7 +155,7 @@ export default function DocumentsPage() {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      return "File size exceeds the 10 MB limit.";
+      return "File size exceeds the 20 MB limit.";
     }
 
     if (file.name.length > 255) {
@@ -398,7 +398,7 @@ export default function DocumentsPage() {
             </button>
 
             <p className="mt-4 text-xs text-muted">
-              PDF, DOCX, TXT, PPTX and XLSX · Maximum 10 MB
+              PDF, DOCX, TXT, PPTX and XLSX · Maximum 20 MB
             </p>
           </div>
         </section>

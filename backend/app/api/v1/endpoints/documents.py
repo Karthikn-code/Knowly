@@ -151,7 +151,7 @@ async def upload_document(
             if len(content) > MAX_UPLOAD_SIZE:
                 raise HTTPException(
                     status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-                    detail="File exceeds the 10 MB upload limit.",
+                    detail="File exceeds the 20 MB upload limit.",
                 )
 
     finally:
@@ -219,18 +219,19 @@ async def upload_document(
             resource_id=str(document.id),
         )
 
+        # Refresh before commit. If refresh fails, the transaction
+        # can still be rolled back safely.
+        await db.refresh(document)
+
         # Commit document, chunks and audit event together.
         await db.commit()
-        await db.flush()
-
-        await db.refresh(document)
 
     except Exception as exc:
         # Roll back document, chunks and audit event.
         await db.rollback()
 
-        # Clean up the privately stored file only when
-        # the database transaction has failed.
+        # Clean up the privately stored file when the
+        # database transaction fails.
         if storage_key is not None:
             try:
                 await document_storage.delete(storage_key)
@@ -320,14 +321,12 @@ async def get_citation_source(
 ):
     """Retrieve a cited document chunk belonging to the authenticated user."""
 
-    # Verify that the parent document belongs to the current user.
     document = await get_owned_document(
         document_id,
         current_user.id,
         db,
     )
 
-    # Verify that the requested chunk belongs to this document.
     result = await db.execute(
         select(DocumentChunk).where(
             DocumentChunk.id == chunk_id,
@@ -431,8 +430,6 @@ async def delete_document(
 
         await db.delete(document)
         await db.commit()
-        await db.flush()
-        await db.refresh(document)
 
     except Exception as exc:
         await db.rollback()

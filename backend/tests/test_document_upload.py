@@ -32,6 +32,7 @@ async def test_refresh_failure_before_commit_rolls_back_and_cleans_up_file(
     db.rollback = AsyncMock()
 
     storage = documents.document_storage
+
     save_mock = AsyncMock(
         return_value=("private/knowly-test-key", len(content))
     )
@@ -74,9 +75,10 @@ async def test_refresh_failure_before_commit_rolls_back_and_cleans_up_file(
 
     assert exc_info.value.status_code == 500
 
-    # The database transaction was already committed.
-    db.commit.assert_awaited_once()
+    # Refresh must fail before the database transaction is committed.
+    db.refresh.assert_awaited_once()
+    db.commit.assert_not_awaited()
 
-    # A refresh failure must not delete the committed document's file.
+    # Roll back the database transaction and clean up the uploaded file.
     db.rollback.assert_awaited_once()
     delete_mock.assert_awaited_once_with("private/knowly-test-key")
