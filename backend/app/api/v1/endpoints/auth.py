@@ -15,7 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.rate_limiter import limiter
 from app.core.dependencies import get_current_user
-from app.core.security import CSRFProtection, create_csrf_token
+from app.core.security import (
+    CSRFProtection,
+    create_csrf_token,
+    validate_request_origin,
+)
 from app.db.session import get_db
 from app.models.session import Session as UserSession
 from app.models.user import User
@@ -68,7 +72,9 @@ async def google_callback(
     except Exception:
         request.session.clear()
 
-        logger.exception("Google OAuth token exchange or verification failed.")
+        logger.exception(
+            "Google OAuth token exchange or verification failed."
+        )
 
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -242,7 +248,8 @@ async def google_callback(
     response.headers["Cache-Control"] = "no-store"
     response.headers["Pragma"] = "no-cache"
     response.headers["Referrer-Policy"] = "no-referrer"
-    
+
+    # Cross-site authentication session cookie.
     response.set_cookie(
         key=settings.SESSION_COOKIE_NAME,
         value=raw_session_token,
@@ -253,15 +260,14 @@ async def google_callback(
         path="/",
     )
 
-    
-
+    # Cross-site CSRF cookie. JavaScript cannot read this cookie.
     response.set_cookie(
         key=settings.CSRF_COOKIE_NAME,
         value=csrf_token,
         max_age=settings.SESSION_TTL_SECONDS,
-        httponly=False,
+        httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
         path="/",
     )
 
@@ -281,6 +287,28 @@ async def get_me(
         "profile_picture": current_user.profile_picture,
         "is_active": current_user.is_active,
         "created_at": current_user.created_at,
+    }
+
+
+@router.get("/csrf")
+async def get_csrf_token(
+    request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """Provide the authenticated session's CSRF token to the frontend."""
+
+    validate_request_origin(request)
+
+    csrf_token = request.cookies.get(settings.CSRF_COOKIE_NAME)
+
+    if not csrf_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF token is missing. Please sign in again.",
+        )
+
+    return {
+        "csrf_token": csrf_token,
     }
 
 
@@ -339,19 +367,22 @@ async def logout(
                 detail="Unable to complete logout.",
             )
 
+    # Delete the session cookie using matching cookie attributes.
     response.delete_cookie(
         key=settings.SESSION_COOKIE_NAME,
         path="/",
         httponly=True,
-        secure=settings.APP_ENV == "production",
-        samesite="lax",
+        secure=True,
+        samesite="none",
     )
 
+    # Delete the CSRF cookie using matching cookie attributes.
     response.delete_cookie(
         key=settings.CSRF_COOKIE_NAME,
         path="/",
+        httponly=True,
         secure=True,
-        samesite="lax",
+        samesite="none",
     )
 
     response.headers["Cache-Control"] = "no-store"

@@ -7,7 +7,8 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
   "http://localhost:8000";
 
-const CSRF_COOKIE_NAME = "__Host-knowly_csrf";
+let csrfTokenCache: string | null = null;
+let csrfTokenPromise: Promise<string> | null = null;
 
 export class ApiError extends Error {
   status: number;
@@ -23,26 +24,6 @@ export class ApiError extends Error {
     this.status = status;
     this.details = details;
   }
-}
-
-function getCsrfToken(): string | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  const cookie = document.cookie
-    .split("; ")
-    .find((item) =>
-      item.startsWith(`${CSRF_COOKIE_NAME}=`),
-    );
-
-  if (!cookie) {
-    return null;
-  }
-
-  return decodeURIComponent(
-    cookie.substring(CSRF_COOKIE_NAME.length + 1),
-  );
 }
 
 function isUnsafeMethod(method: string): boolean {
@@ -92,6 +73,81 @@ async function getErrorMessage(
   };
 }
 
+/**
+ * Retrieve the CSRF token from the authenticated backend.
+ *
+ * The CSRF cookie belongs to the backend domain, so the frontend
+ * cannot read it directly using document.cookie.
+ *
+ * The backend returns the session-bound token through this endpoint.
+ */
+async function getCsrfToken(): Promise<string> {
+  if (csrfTokenCache) {
+    return csrfTokenCache;
+  }
+
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
+  }
+
+  csrfTokenPromise = (async () => {
+    let response: Response;
+
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/api/v1/auth/csrf`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+    } catch {
+      throw new ApiError(
+        "Unable to retrieve the security token. Please check your connection.",
+        0,
+      );
+    }
+
+    if (!response.ok) {
+      const error = await getErrorMessage(response);
+
+      throw new ApiError(
+        error.message,
+        response.status,
+        error.details,
+      );
+    }
+
+    const data: {
+      csrf_token?: string;
+    } = await response.json();
+
+    if (
+      typeof data.csrf_token !== "string" ||
+      !data.csrf_token
+    ) {
+      throw new ApiError(
+        "The backend returned an invalid security token.",
+        response.status,
+      );
+    }
+
+    csrfTokenCache = data.csrf_token;
+
+    return csrfTokenCache;
+  })();
+
+  try {
+    return await csrfTokenPromise;
+  } finally {
+    csrfTokenPromise = null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
@@ -109,11 +165,9 @@ export async function apiFetch<T>(
   }
 
   if (isUnsafeMethod(method)) {
-    const csrfToken = getCsrfToken();
+    const csrfToken = await getCsrfToken();
 
-    if (csrfToken) {
-      headers.set("X-CSRF-Token", csrfToken);
-    }
+    headers.set("X-CSRF-Token", csrfToken);
   }
 
   let response: Response;
@@ -141,6 +195,12 @@ export async function apiFetch<T>(
       response.status,
       error.details,
     );
+  }
+
+  // Clear the cached CSRF token after successful logout.
+  if (path.endsWith("/auth/logout")) {
+    csrfTokenCache = null;
+    csrfTokenPromise = null;
   }
 
   if (response.status === 204) {
