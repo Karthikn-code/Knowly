@@ -4,6 +4,7 @@ Knowly Gemini embedding service.
 """
 
 import asyncio
+import logging
 import math
 
 from google import genai
@@ -11,6 +12,8 @@ from google.genai import types
 
 from app.core.config import settings
 
+
+logger = logging.getLogger(__name__)
 
 EMBEDDING_MODEL = "gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
@@ -79,10 +82,15 @@ def _generate_embedding_sync(
     except GeminiEmbeddingError:
         raise
 
-    except Exception as exc:
+    except Exception:
+        logger.exception(
+            "Gemini embedding generation failed. Model: %s",
+            EMBEDDING_MODEL,
+        )
+
         raise GeminiEmbeddingError(
             "Gemini embedding generation failed."
-        ) from exc
+        ) from None
 
     finally:
         if client is not None:

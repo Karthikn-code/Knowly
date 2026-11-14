@@ -4,10 +4,14 @@ Knowly Gemini generation service.
 """
 
 import asyncio
+import logging
 
 from google import genai
 
 from app.core.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiGenerationError(Exception):
@@ -33,14 +37,24 @@ def _generate_response_sync(prompt: str) -> str:
                 model=settings.GEMINI_GENERATION_MODEL,
                 input=prompt,
             )
-        except Exception as exc:
+        except Exception:
+            logger.exception(
+                "Gemini generation request failed. Model: %s",
+                settings.GEMINI_GENERATION_MODEL,
+            )
+
             raise GeminiGenerationError(
                 "Gemini generation request failed."
-            ) from exc
+            ) from None
 
         answer = response.output_text
 
         if not answer or not answer.strip():
+            logger.error(
+                "Gemini returned an empty response. Model: %s",
+                settings.GEMINI_GENERATION_MODEL,
+            )
+
             raise GeminiGenerationError(
                 "Gemini returned an empty response."
             )
