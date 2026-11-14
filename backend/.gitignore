@@ -1,0 +1,32 @@
+
+# Python virtual environment
+.venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# Private document storage
+private_storage/
+
+# Temporary uploaded files
+tmp_uploads/
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

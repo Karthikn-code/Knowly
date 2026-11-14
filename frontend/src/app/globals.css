@@ -1,0 +1,65 @@
+
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171729;
+
+  /* Knowly brand colours */
+  --primary: #6c4bea;
+  --primary-dark: #5635d5;
+  --primary-light: #f1edff;
+
+  /* Supporting colours */
+  --secondary: #f8f7fc;
+  --muted: #77778c;
+  --border: #eae8f2;
+
+  /* Typography */
+  --font-primary: Arial, Helvetica, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-primary);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+}

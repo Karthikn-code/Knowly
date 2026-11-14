@@ -1,0 +1,12 @@
+Knowly Document Processing Integration Test
+
+Knowly is an AI-powered document assistant.
+
+Unique test phrase: KNOWLY VECTOR PIPELINE NOVEMBER 2026.
+
+This document verifies text extraction, document chunking,
+Gemini embedding generation, PostgreSQL vector storage,
+and semantic search.
+
+The system should retrieve this document when asked about
+the Knowly vector pipeline integration test.
