@@ -16,13 +16,12 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
-    
+
     # Google Gemini AI configuration
     GEMINI_API_KEY: SecretStr
     GEMINI_GENERATION_MODEL: str = "gemini-3.5-flash-lite"
-    
-    
-        # Private document storage
+
+    # Private document storage
     DOCUMENT_STORAGE_DIR: Path = BASE_DIR / "private_storage" / "documents"
     MAX_UPLOAD_SIZE_BYTES: int = 10 * 1024 * 1024
 
@@ -49,6 +48,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: SecretStr
     POSTGRES_HOST: str = "127.0.0.1"
     POSTGRES_PORT: int = 5433
+    POSTGRES_SSLMODE: str = "prefer"
 
     @property
     def DATABASE_URL(self) -> URL:
@@ -59,6 +59,7 @@ class Settings(BaseSettings):
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
+            query={"sslmode": self.POSTGRES_SSLMODE},
         )
 
     model_config = SettingsConfigDict(
