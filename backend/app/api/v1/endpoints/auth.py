@@ -40,7 +40,7 @@ router = APIRouter(
 async def google_login(request: Request):
     """Redirect the user to Google's sign-in page."""
 
-    redirect_uri = request.url_for("google_callback")
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
 
     return await oauth.google.authorize_redirect(
         request,

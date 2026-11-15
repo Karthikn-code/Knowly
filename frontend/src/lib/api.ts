@@ -3,9 +3,7 @@ import type {
   ApiErrorResponse,
 } from "@/lib/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
-  "http://localhost:8000";
+const API_BASE_URL = "";
 
 let csrfTokenCache: string | null = null;
 let csrfTokenPromise: Promise<string> | null = null;

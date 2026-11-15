@@ -1,8 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const API_BASE_URL =
-process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const GOOGLE_LOGIN_URL = "/api/v1/auth/google/login";
 
 const features = [
 {
@@ -122,7 +121,7 @@ return (
 
           {/* Google Authentication */}
           <a
-            href={`${API_BASE_URL}/api/v1/auth/google/login`}
+            href={GOOGLE_LOGIN_URL}
             className="group flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-800 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-100"
           >
             <svg
