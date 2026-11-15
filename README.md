@@ -1,16 +1,10 @@
 # Knowly
 
-<p align="center">
-  **AI-Powered Document Assistant**
-  <br />
-  Upload documents, ask questions, and discover information through intelligent conversations.
-</p>
+AI-Powered Document Assistant
 
-<p align="center">
-  <a href="https://knowly-ten-amber.vercel.app">Live Demo</a> ·
-  <a href="https://github.com/Karthikn-code/Knowly">Source Code</a>
-</p>
+Upload documents, ask questions, and discover information through intelligent conversations.
 
+[Live Demo](https://knowly-ten-amber.vercel.app/) · [Source Code](https://github.com/Karthikn-code/Knowly)
 ---
 
 ## Overview
