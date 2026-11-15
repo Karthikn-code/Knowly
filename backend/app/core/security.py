@@ -11,11 +11,32 @@ from app.core.config import settings
 
 
 def validate_request_origin(request: Request) -> None:
-    """Allow requests only from the configured frontend origin."""
+    """Validate requests against the configured frontend origin."""
 
     origin = request.headers.get("origin")
+    using_referer = False
 
-    if not origin or origin == "null":
+    # Browsers may omit Origin on same-origin GET/HEAD requests.
+    # In that case, validate the Referer instead.
+    if not origin:
+        if request.method.upper() not in {"GET", "HEAD"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Request origin is required or invalid.",
+            )
+
+        referer = request.headers.get("referer")
+
+        if not referer:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Request origin is required or invalid.",
+            )
+
+        origin = referer
+        using_referer = True
+
+    if origin == "null":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Request origin is required or invalid.",
@@ -31,9 +52,14 @@ def validate_request_origin(request: Request) -> None:
         or not supplied.hostname
         or supplied.username is not None
         or supplied.password is not None
-        or supplied.path
-        or supplied.query
-        or supplied.fragment
+        or (
+            not using_referer
+            and (
+                supplied.path
+                or supplied.query
+                or supplied.fragment
+            )
+        )
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
